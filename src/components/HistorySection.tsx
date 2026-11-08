@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Pencil, Trash2, History, ShoppingBag, X, Receipt as ReceiptIcon } from 'lucide-react';
 import type { Member, Expense } from '@/lib';
 import { formatMoneyShort, formatDate } from '@/lib';
@@ -26,6 +26,7 @@ export function HistorySection({
   const [filterMember, setFilterMember] = useState<string>('all');
   const [lightboxPath, setLightboxPath] = useState<string | null>(null);
   const [receiptThumbs, setReceiptThumbs] = useState<Record<string, string>>({});
+  const [pendingDelete, setPendingDelete] = useState<Expense | null>(null);
 
   const filtered = useMemo(() => {
     return expenses
@@ -46,6 +47,17 @@ export function HistorySection({
       .then((url) => setReceiptThumbs((prev) => ({ ...prev, [expenseId]: url })))
       .catch(() => {});
   };
+
+  const closePendingDelete = () => setPendingDelete(null);
+
+  useEffect(() => {
+    if (!pendingDelete) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') closePendingDelete();
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [pendingDelete]);
 
   return (
     <section className="bg-white rounded-3xl shadow-card p-5 sm:p-6 animate-fade-up">
@@ -186,7 +198,7 @@ export function HistorySection({
                     <Pencil size={14} />
                   </button>
                   <button
-                    onClick={() => onDelete(exp.id)}
+                    onClick={() => setPendingDelete(exp)}
                     className="p-2 rounded-lg text-ink-muted hover:text-danger hover:bg-danger-soft"
                     aria-label="Видалити"
                   >
@@ -201,6 +213,89 @@ export function HistorySection({
 
       {lightboxPath && (
         <ReceiptLightbox path={lightboxPath} onClose={closeLightbox} />
+      )}
+
+      {pendingDelete && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink/40 backdrop-blur-sm animate-fade-up"
+          onClick={closePendingDelete}
+        >
+          <div
+            className="bg-white rounded-3xl shadow-card max-w-sm w-full p-6 animate-pop"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <div className="h-9 w-9 rounded-xl bg-danger-soft flex items-center justify-center">
+                  <Trash2 size={17} className="text-danger" />
+                </div>
+                <h3 className="text-lg font-bold text-ink">
+                  Видалити витрату?
+                </h3>
+              </div>
+              <button
+                onClick={closePendingDelete}
+                className="p-2 rounded-lg text-ink-muted hover:bg-canvas"
+                aria-label="Закрити"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="rounded-2xl bg-canvas/60 p-4 mb-5">
+              <div className="flex items-center gap-3">
+                <div
+                  className="h-10 w-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                  style={{ backgroundColor: CATEGORIES[pendingDelete.category].bg }}
+                >
+                  {(() => {
+                    const Icon = CATEGORIES[pendingDelete.category].icon;
+                    return (
+                      <Icon
+                        size={18}
+                        style={{ color: CATEGORIES[pendingDelete.category].color }}
+                      />
+                    );
+                  })()}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold text-ink truncate">
+                    {pendingDelete.title}
+                  </p>
+                  <p className="text-xs text-ink-muted mt-0.5">
+                    {CATEGORIES[pendingDelete.category].label}
+                  </p>
+                </div>
+                <p className="text-sm font-bold text-ink flex-shrink-0">
+                  {formatMoneyShort(pendingDelete.amount)}
+                </p>
+              </div>
+            </div>
+
+            <p className="text-sm text-ink-muted mb-5">
+              Витрату буде видалено з історії, а баланси та борги учасників —
+              перераховано. Дію не можна скасувати.
+            </p>
+
+            <div className="flex gap-2">
+              <button
+                onClick={() => {
+                  onDelete(pendingDelete.id);
+                  closePendingDelete();
+                }}
+                className="flex-1 rounded-xl bg-danger text-white text-sm font-semibold py-2.5 hover:opacity-90 transition-opacity"
+              >
+                Видалити
+              </button>
+              <button
+                onClick={closePendingDelete}
+                className="flex-1 rounded-xl bg-white text-ink-muted text-sm font-medium py-2.5 border border-gray-200 hover:text-ink transition-colors"
+              >
+                Скасувати
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </section>
   );

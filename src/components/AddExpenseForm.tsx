@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Plus, AlertCircle, Calculator, Camera, ImagePlus, Trash2, Loader2 } from 'lucide-react';
+import { Plus, AlertCircle, Calculator, Camera, ImagePlus, Trash2, Loader2, X } from 'lucide-react';
 import type { Member, Expense } from '@/lib';
 import { CATEGORY_LIST } from '@/types';
 import type { CategoryId, SplitMode } from '@/types';
@@ -50,6 +50,12 @@ export function AddExpenseForm({
   const [receiptError, setReceiptError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const [cameraState, setCameraState] = useState<
+    'closed' | 'starting' | 'active' | 'error'
+  >('closed');
+  const [cameraErrorMsg, setCameraErrorMsg] = useState('');
 
   // sync form when editing starts / clears
   useEffect(() => {
@@ -221,6 +227,106 @@ export function AddExpenseForm({
       setReceiptError('Не вдалося відкрити чек');
     }
   };
+
+  const stopCameraStream = () => {
+    streamRef.current?.getTracks().forEach((t) => t.stop());
+    streamRef.current = null;
+  };
+
+  const closeCamera = () => {
+    stopCameraStream();
+    setCameraState('closed');
+  };
+
+  const openCamera = async () => {
+    // On mobile devices the native capture input opens the system camera app
+    if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+      cameraInputRef.current?.click();
+      return;
+    }
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setCameraErrorMsg(
+        'Камера недоступна в цьому браузері. Обери фото з файлів.',
+      );
+      setCameraState('error');
+      return;
+    }
+    setCameraErrorMsg('');
+    setCameraState('starting');
+    try {
+      let stream: MediaStream;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: 'environment',
+            width: { ideal: 1920 },
+            height: { ideal: 1440 },
+          },
+          audio: false,
+        });
+      } catch {
+        // no rear-facing camera — fall back to any available camera
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: true,
+          audio: false,
+        });
+      }
+      streamRef.current = stream;
+      setCameraState('active');
+    } catch (err) {
+      const name = (err as DOMException)?.name;
+      if (name === 'NotAllowedError' || name === 'SecurityError') {
+        setCameraErrorMsg(
+          'Доступ до камери заборонено. Дозволь камеру в налаштуваннях браузера або обери фото вручну.',
+        );
+      } else if (name === 'NotFoundError' || name === 'OverconstrainedError') {
+        setCameraErrorMsg('Камеру не знайдено на цьому пристрої.');
+      } else if (name === 'NotReadableError') {
+        setCameraErrorMsg(
+          'Камера зайнята іншою програмою. Закрий її та спробуй ще раз.',
+        );
+      } else {
+        setCameraErrorMsg('Не вдалося відкрити камеру. Обери фото з файлів.');
+      }
+      setCameraState('error');
+    }
+  };
+
+  const capturePhoto = () => {
+    const video = videoRef.current;
+    if (!video || !video.videoWidth) return;
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    canvas.getContext('2d')?.drawImage(video, 0, 0);
+    canvas.toBlob(
+      (blob) => {
+        if (!blob) {
+          closeCamera();
+          setReceiptError('Не вдалося зробити фото. Спробуй ще раз.');
+          return;
+        }
+        const file = new File([blob], `receipt-${Date.now()}.jpg`, {
+          type: 'image/jpeg',
+        });
+        closeCamera();
+        handleReceiptSelect(file);
+      },
+      'image/jpeg',
+      0.9,
+    );
+  };
+
+  // attach the stream once the preview is rendered
+  useEffect(() => {
+    if (cameraState === 'active' && videoRef.current && streamRef.current) {
+      videoRef.current.srcObject = streamRef.current;
+      videoRef.current.play().catch(() => {});
+    }
+  }, [cameraState]);
+
+  // release the camera when the form unmounts
+  useEffect(() => () => stopCameraStream(), []);
 
   if (members.length === 0) return null;
 
@@ -584,7 +690,7 @@ export function AddExpenseForm({
             </button>
             <button
               type="button"
-              onClick={() => cameraInputRef.current?.click()}
+              onClick={openCamera}
               disabled={receiptUploading}
               className="flex-1 flex items-center justify-center gap-2 rounded-xl border border-gray-200 bg-canvas/50 px-3 py-3 text-sm font-medium text-ink-muted hover:border-gray-300 hover:text-ink transition-all"
             >
@@ -612,6 +718,112 @@ export function AddExpenseForm({
         <Plus size={18} />
         {editingExpense ? 'Зберегти зміни' : 'Додати витрату'}
       </button>
+
+      {/* Camera capture modal */}
+      {cameraState !== 'closed' && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink/40 backdrop-blur-sm animate-fade-up"
+          onClick={closeCamera}
+        >
+          <div
+            className="bg-white rounded-3xl shadow-card max-w-sm w-full p-6 animate-pop"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {cameraState === 'error' ? (
+              <>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <div className="h-9 w-9 rounded-xl bg-danger-soft flex items-center justify-center">
+                      <Camera size={17} className="text-danger" />
+                    </div>
+                    <h3 className="text-lg font-bold text-ink">Камера</h3>
+                  </div>
+                  <button
+                    onClick={closeCamera}
+                    className="p-2 rounded-lg text-ink-muted hover:bg-canvas"
+                    aria-label="Закрити"
+                  >
+                    <X size={18} />
+                  </button>
+                </div>
+                <p className="text-sm text-danger flex items-start gap-1.5 mb-5">
+                  <AlertCircle size={15} className="flex-shrink-0 mt-0.5" />
+                  {cameraErrorMsg}
+                </p>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => {
+                      closeCamera();
+                      fileInputRef.current?.click();
+                    }}
+                    className="flex-1 rounded-xl bg-brand text-white text-sm font-semibold py-2.5 hover:bg-brand-dark transition-colors"
+                  >
+                    Обрати фото з файлів
+                  </button>
+                  <button
+                    onClick={closeCamera}
+                    className="flex-1 rounded-xl bg-white text-ink-muted text-sm font-medium py-2.5 border border-gray-200 hover:text-ink transition-colors"
+                  >
+                    Скасувати
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <div className="h-9 w-9 rounded-xl bg-brand-soft flex items-center justify-center">
+                      <Camera size={17} className="text-brand" />
+                    </div>
+                    <h3 className="text-lg font-bold text-ink">
+                      Зробити фото чека
+                    </h3>
+                  </div>
+                  <button
+                    onClick={closeCamera}
+                    className="p-2 rounded-lg text-ink-muted hover:bg-canvas"
+                    aria-label="Закрити"
+                  >
+                    <X size={18} />
+                  </button>
+                </div>
+
+                <div className="relative rounded-2xl overflow-hidden bg-ink/90 mb-4 aspect-[3/4]">
+                  <video
+                    ref={videoRef}
+                    playsInline
+                    muted
+                    autoPlay
+                    className="w-full h-full object-cover"
+                  />
+                  {cameraState === 'starting' && (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-white/80">
+                      <Loader2 size={26} className="animate-spin" />
+                      <p className="text-sm">Запитуємо доступ до камери...</p>
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex gap-2">
+                  <button
+                    onClick={capturePhoto}
+                    disabled={cameraState !== 'active'}
+                    className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-brand text-white text-sm font-semibold py-2.5 hover:bg-brand-dark transition-colors disabled:opacity-60"
+                  >
+                    <Camera size={16} /> Зробити фото
+                  </button>
+                  <button
+                    onClick={closeCamera}
+                    className="flex-1 rounded-xl bg-white text-ink-muted text-sm font-medium py-2.5 border border-gray-200 hover:text-ink transition-colors"
+                  >
+                    Скасувати
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </section>
   );
 }

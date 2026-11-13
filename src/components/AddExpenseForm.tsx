@@ -29,6 +29,20 @@ interface FieldErrors {
   shares?: string;
 }
 
+// Input limits (in kopiykas for the amount)
+const MAX_AMOUNT_KOP = 999999999; // 9 999 999,99 ₴
+const AMOUNT_MAX_MSG = 'Максимальна сума — 9 999 999,99 ₴';
+const TITLE_MAX_LENGTH = 100;
+const TITLE_MAX_MSG = `Назва не може перевищувати ${TITLE_MAX_LENGTH} символів`;
+
+/** Allow only digits with an optional single decimal separator, ≤2 decimals, ≤7 integer digits. */
+const sanitizeAmountInput = (raw: string): string => {
+  const cleaned = raw.replace(/,/g, '.').replace(/[^0-9.]/g, '');
+  const [intPart, ...rest] = cleaned.split('.');
+  const frac = rest.length > 0 ? rest.join('').slice(0, 2) : null;
+  return frac === null ? intPart.slice(0, 7) : `${intPart.slice(0, 7)}.${frac}`;
+};
+
 export function AddExpenseForm({
   members,
   onAdd,
@@ -56,6 +70,8 @@ export function AddExpenseForm({
     'closed' | 'starting' | 'active' | 'error'
   >('closed');
   const [cameraErrorMsg, setCameraErrorMsg] = useState('');
+  const [titleLimitMsg, setTitleLimitMsg] = useState(false);
+  const [amountLimitMsg, setAmountLimitMsg] = useState(false);
 
   // sync form when editing starts / clears
   useEffect(() => {
@@ -81,11 +97,15 @@ export function AddExpenseForm({
     setReceiptPath(editingExpense?.receiptPath);
     setReceiptPreview(null);
     setReceiptError(null);
+    setTitleLimitMsg(Boolean(editingExpense && editingExpense.title.length > TITLE_MAX_LENGTH));
+    setAmountLimitMsg(Boolean(editingExpense && editingExpense.amount > MAX_AMOUNT_KOP));
   }, [editingExpense]);
 
   const resetForm = () => {
     setAmountStr('');
     setTitle('');
+    setTitleLimitMsg(false);
+    setAmountLimitMsg(false);
     setCategory('groceries');
     setPaidBy('');
     setSplitBetween([]);
@@ -105,6 +125,17 @@ export function AddExpenseForm({
   }, [members, editingExpense, splitBetween]);
 
   const totalKop = useMemo(() => parseAmountToKopiykas(amountStr), [amountStr]);
+  const amountOverLimit = totalKop > MAX_AMOUNT_KOP;
+
+  const handleAmountChange = (raw: string) => {
+    setAmountStr(sanitizeAmountInput(raw));
+    setAmountLimitMsg(parseAmountToKopiykas(raw) > MAX_AMOUNT_KOP);
+  };
+
+  const handleTitleChange = (raw: string) => {
+    setTitle(raw.slice(0, TITLE_MAX_LENGTH));
+    setTitleLimitMsg(raw.length > TITLE_MAX_LENGTH);
+  };
 
   const computedShares = useMemo(() => {
     if (splitMode === 'equal') {
@@ -128,7 +159,9 @@ export function AddExpenseForm({
   const validate = (): boolean => {
     const e: FieldErrors = {};
     if (!totalKop || totalKop <= 0) e.amount = 'Введи правильну суму витрати';
+    else if (totalKop > MAX_AMOUNT_KOP) e.amount = AMOUNT_MAX_MSG;
     if (!title.trim()) e.title = 'Введи назву витрати';
+    else if (title.length > TITLE_MAX_LENGTH) e.title = TITLE_MAX_MSG;
     if (!paidBy) e.paidBy = 'Обери, хто оплатив покупку';
     if (splitBetween.length === 0)
       e.splitBetween = 'Обери хоча б одного учасника';
@@ -361,10 +394,10 @@ export function AddExpenseForm({
               type="text"
               inputMode="decimal"
               value={amountStr}
-              onChange={(e) => setAmountStr(e.target.value)}
+              onChange={(e) => handleAmountChange(e.target.value)}
               placeholder="0"
               className={`w-full rounded-xl border bg-canvas/50 px-3.5 py-3 pr-9 text-base font-semibold text-ink placeholder:text-ink-muted/60 placeholder:font-normal focus:outline-none focus:ring-2 transition ${
-                errors.amount
+                errors.amount || amountOverLimit || amountLimitMsg
                   ? 'border-danger focus:ring-danger/30'
                   : 'border-gray-200 focus:ring-brand/40 focus:border-brand'
               }`}
@@ -373,9 +406,10 @@ export function AddExpenseForm({
               ₴
             </span>
           </div>
-          {errors.amount && (
+          {(errors.amount || amountOverLimit || amountLimitMsg) && (
             <p className="mt-1.5 text-xs text-danger flex items-center gap-1">
-              <AlertCircle size={12} /> {errors.amount}
+              <AlertCircle size={12} />
+              {amountOverLimit || amountLimitMsg ? AMOUNT_MAX_MSG : errors.amount}
             </p>
           )}
         </div>
@@ -388,17 +422,18 @@ export function AddExpenseForm({
           <input
             type="text"
             value={title}
-            onChange={(e) => setTitle(e.target.value)}
+            maxLength={TITLE_MAX_LENGTH}
+            onChange={(e) => handleTitleChange(e.target.value)}
             placeholder="Наприклад, продукти на тиждень"
             className={`w-full rounded-xl border bg-canvas/50 px-3.5 py-3 text-sm text-ink placeholder:text-ink-muted/60 focus:outline-none focus:ring-2 transition ${
-              errors.title
+              errors.title || titleLimitMsg
                 ? 'border-danger focus:ring-danger/30'
                 : 'border-gray-200 focus:ring-brand/40 focus:border-brand'
             }`}
           />
-          {errors.title && (
+          {(errors.title || titleLimitMsg) && (
             <p className="mt-1.5 text-xs text-danger flex items-center gap-1">
-              <AlertCircle size={12} /> {errors.title}
+              <AlertCircle size={12} /> {titleLimitMsg ? TITLE_MAX_MSG : errors.title}
             </p>
           )}
         </div>

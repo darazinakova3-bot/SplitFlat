@@ -24,6 +24,7 @@ import { DebtsSection } from '@/components/DebtsSection';
 import { HistorySection } from '@/components/HistorySection';
 import { CategoryChart } from '@/components/CategoryChart';
 import { MonthCompareSection } from '@/components/MonthCompareSection';
+import { CalendarSection } from '@/components/CalendarSection';
 import { SettingsModal } from '@/components/SettingsModal';
 import { EmptyMembersState } from '@/components/EmptyMembersState';
 import { ToastContainer } from '@/components/Toast';
@@ -375,6 +376,12 @@ function App() {
                 prevMonthKey={prevMonthKey}
                 prevTotal={monthTotal(prevMonthData)}
                 prevCount={prevMonthData?.expenses.length ?? 0}
+              />
+
+              <CalendarSection
+                currentMonthKey={state.currentMonth}
+                expenses={monthData.expenses}
+                members={membersMap}
               />
 
               <HistorySection

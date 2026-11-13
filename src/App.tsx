@@ -8,7 +8,7 @@ import {
   createNewMonth,
   newMemberId,
 } from '@/storage';
-import { uid, getMonthKey } from '@/lib';
+import { uid, getMonthKey, monthKeyToDate } from '@/lib';
 import {
   computeBalances,
   computeSettlements,
@@ -23,6 +23,7 @@ import { BalanceCards } from '@/components/BalanceCards';
 import { DebtsSection } from '@/components/DebtsSection';
 import { HistorySection } from '@/components/HistorySection';
 import { CategoryChart } from '@/components/CategoryChart';
+import { MonthCompareSection } from '@/components/MonthCompareSection';
 import { SettingsModal } from '@/components/SettingsModal';
 import { EmptyMembersState } from '@/components/EmptyMembersState';
 import { ToastContainer } from '@/components/Toast';
@@ -292,6 +293,16 @@ function App() {
 
   const hasMembers = monthData.members.length > 0;
 
+  // --- Month comparison (current vs calendar-previous month) ---
+  const prevMonthKey = useMemo(() => {
+    const d = monthKeyToDate(state.currentMonth);
+    d.setMonth(d.getMonth() - 1);
+    return getMonthKey(d);
+  }, [state.currentMonth]);
+  const monthTotal = (data: typeof monthData) =>
+    (data?.expenses ?? []).reduce((acc, e) => acc + e.amount, 0);
+  const prevMonthData = state.months[prevMonthKey];
+
   return (
     <div className="min-h-screen bg-canvas">
       <ToastContainer toasts={toasts} onClose={closeToast} />
@@ -356,6 +367,15 @@ function App() {
                 />
                 <CategoryChart expenses={monthData.expenses} />
               </div>
+
+              <MonthCompareSection
+                currentMonthKey={state.currentMonth}
+                currentTotal={monthTotal(monthData)}
+                currentCount={monthData.expenses.length}
+                prevMonthKey={prevMonthKey}
+                prevTotal={monthTotal(prevMonthData)}
+                prevCount={prevMonthData?.expenses.length ?? 0}
+              />
 
               <HistorySection
                 expenses={monthData.expenses}

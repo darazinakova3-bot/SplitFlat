@@ -15,18 +15,30 @@ export function computeBalances(
   const balances = new Map<string, number>();
   for (const m of members) balances.set(m.id, 0);
 
+  // Only real members can hold a balance. Shares/expenses referencing unknown
+  // members (legacy or corrupted data) would otherwise leave debts that no
+  // settlement row can cover, making displayed debts incorrect.
+  const memberIds = new Set(members.map((m) => m.id));
+
   for (const exp of expenses) {
-    const paidBy = balances.get(exp.paidBy) ?? 0;
-    balances.set(exp.paidBy, paidBy + exp.amount);
+    if (!memberIds.has(exp.paidBy)) continue;
+    let knownShares = 0;
     for (const share of exp.shares) {
+      if (!memberIds.has(share.memberId)) continue;
+      knownShares += share.amount;
       const cur = balances.get(share.memberId) ?? 0;
       balances.set(share.memberId, cur - share.amount);
     }
+    // the payer is credited with what real participants actually owe;
+    // for valid data this equals exp.amount (validated at save time)
+    const paidBy = balances.get(exp.paidBy) ?? 0;
+    balances.set(exp.paidBy, paidBy + knownShares);
   }
 
   // Apply recorded payments: sender's balance increases (they paid off debt),
   // receiver's balance decreases (they got the owed money back).
   for (const p of payments) {
+    if (!memberIds.has(p.fromMemberId) || !memberIds.has(p.toMemberId)) continue;
     const from = balances.get(p.fromMemberId) ?? 0;
     const to = balances.get(p.toMemberId) ?? 0;
     balances.set(p.fromMemberId, from + p.amount);

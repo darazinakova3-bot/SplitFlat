@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Pencil, Trash2, History, ShoppingBag, X, Receipt as ReceiptIcon } from 'lucide-react';
+import { Pencil, Trash2, History, ShoppingBag, X, Search, Receipt as ReceiptIcon } from 'lucide-react';
 import type { Member, Expense } from '@/lib';
 import { formatMoneyShort, formatDate } from '@/lib';
 import { CATEGORIES, CATEGORY_LIST } from '@/types';
@@ -24,18 +24,22 @@ export function HistorySection({
     'all',
   );
   const [filterMember, setFilterMember] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState('');
   const [lightboxPath, setLightboxPath] = useState<string | null>(null);
   const [receiptThumbs, setReceiptThumbs] = useState<Record<string, string>>({});
   const [pendingDelete, setPendingDelete] = useState<Expense | null>(null);
 
   const filtered = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
     return expenses
+      .filter((e) => q === '' || e.title.toLowerCase().includes(q))
       .filter((e) => filterCategory === 'all' || e.category === filterCategory)
       .filter((e) => filterMember === 'all' || e.paidBy === filterMember)
       .sort((a, b) => b.createdAt - a.createdAt);
-  }, [expenses, filterCategory, filterMember]);
+  }, [expenses, searchQuery, filterCategory, filterMember]);
 
-  const hasFilters = filterCategory !== 'all' || filterMember !== 'all';
+  const hasFilters =
+    filterCategory !== 'all' || filterMember !== 'all' || searchQuery.trim() !== '';
 
   const openLightbox = (path: string) => setLightboxPath(path);
 
@@ -69,6 +73,19 @@ export function HistorySection({
 
       {/* Filters */}
       <div className="flex flex-wrap gap-2 mb-4">
+        <div className="relative min-w-[160px] flex-1">
+          <Search
+            size={14}
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-muted pointer-events-none"
+          />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Пошук за назвою..."
+            className="w-full rounded-xl border border-gray-200 bg-canvas/50 pl-8 pr-3 py-2 text-sm text-ink placeholder:text-ink-muted/60 focus:outline-none focus:ring-2 focus:ring-brand/40 focus:border-brand transition"
+          />
+        </div>
         <select
           value={filterCategory}
           onChange={(e) =>
@@ -98,6 +115,7 @@ export function HistorySection({
         {hasFilters && (
           <button
             onClick={() => {
+              setSearchQuery('');
               setFilterCategory('all');
               setFilterMember('all');
             }}
@@ -116,12 +134,12 @@ export function HistorySection({
           <p className="font-medium text-ink">
             {expenses.length === 0
               ? 'Поки що витрат немає'
-              : 'Нічого не знайдено за фільтрами'}
+              : 'Нічого не знайдено'}
           </p>
           <p className="text-sm text-ink-muted mt-1 max-w-xs">
             {expenses.length === 0
               ? 'Додай першу покупку та забудь про плутанину з грошима'
-              : 'Спробуй змінити фільтри або скинути їх'}
+              : 'Спробуй змінити пошук або фільтри'}
           </p>
         </div>
       ) : (

@@ -199,14 +199,14 @@ export function MembersSection({
                   <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button
                       onClick={() => handleEditStart(m)}
-                      className="p-1.5 rounded-lg bg-white/80 text-ink-muted hover:text-brand"
+                      className="p-1.5 rounded-lg bg-canvas/80 text-ink-muted hover:text-brand"
                       aria-label="Редагувати"
                     >
                       <Pencil size={13} />
                     </button>
                     <button
                       onClick={() => onDelete(m.id)}
-                      className="p-1.5 rounded-lg bg-white/80 text-ink-muted hover:text-danger"
+                      className="p-1.5 rounded-lg bg-canvas/80 text-ink-muted hover:text-danger"
                       aria-label="Видалити"
                     >
                       <Trash2 size={13} />

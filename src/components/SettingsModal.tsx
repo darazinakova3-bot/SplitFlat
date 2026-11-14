@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
-import { X, Trash2, Download, RotateCcw, Key, Eye, EyeOff, Check, Sparkles, Loader2, AlertCircle } from 'lucide-react';
+import { X, Trash2, Download, RotateCcw, Key, Eye, EyeOff, Check, Sparkles, Loader2, AlertCircle, Palette } from 'lucide-react';
 import type { AppState } from '@/lib';
-import { loadApiKey, saveApiKey, loadModel, saveModel } from '@/storage';
+import { loadApiKey, saveApiKey, loadModel, saveModel, loadTheme, saveTheme, applyTheme } from '@/storage';
 import { AI_MODELS, testModelConnection } from '@/ai';
 import type { TestResult } from '@/ai';
+import { THEMES } from '@/themes';
+import type { ThemeId } from '@/themes';
 
 interface SettingsModalProps {
   open: boolean;
@@ -28,6 +30,13 @@ export function SettingsModal({
   const [modelSaved, setModelSaved] = useState(false);
   const [testing, setTesting] = useState(false);
   const [testResult, setTestResult] = useState<TestResult | null>(null);
+  const [theme, setTheme] = useState<ThemeId>(() => loadTheme());
+
+  const selectTheme = (id: ThemeId) => {
+    saveTheme(id);
+    applyTheme(id);
+    setTheme(id);
+  };
 
   useEffect(() => {
     if (open) {
@@ -82,7 +91,7 @@ export function SettingsModal({
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-3xl shadow-card max-w-md w-full p-6 animate-pop"
+        className="bg-white rounded-3xl shadow-card max-w-md w-full p-6 animate-pop max-h-[85vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-5">
@@ -104,6 +113,62 @@ export function SettingsModal({
           <div className="rounded-2xl bg-canvas/60 p-4">
             <p className="text-2xl font-bold text-mint-dark">{totalExpenses}</p>
             <p className="text-xs text-ink-muted mt-1">витрат</p>
+          </div>
+        </div>
+
+        <div className="mb-6">
+          <div className="flex items-center gap-1.5 mb-3">
+            <Palette size={15} className="text-brand" />
+            <h3 className="text-sm font-semibold text-ink">Тема оформлення</h3>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            {THEMES.map((t) => {
+              const active = t.id === theme;
+              return (
+                <button
+                  key={t.id}
+                  type="button"
+                  onClick={() => selectTheme(t.id)}
+                  aria-pressed={active}
+                  className={`rounded-2xl border p-2.5 text-left transition-all ${
+                    active
+                      ? 'border-brand bg-brand-soft/40 ring-1 ring-brand/40'
+                      : 'border-gray-200 hover:border-brand'
+                  }`}
+                >
+                  <div className="flex items-center gap-1.5 mb-2">
+                    <span
+                      className="h-5 w-5 rounded-lg border border-black/10 flex-shrink-0"
+                      style={{ backgroundColor: t.preview.canvas }}
+                      aria-hidden="true"
+                    />
+                    <span
+                      className="h-5 w-5 rounded-lg border border-black/10 flex-shrink-0"
+                      style={{ backgroundColor: t.preview.card }}
+                      aria-hidden="true"
+                    />
+                    <span
+                      className="h-5 w-5 rounded-lg flex-shrink-0"
+                      style={{ backgroundColor: t.preview.accent }}
+                      aria-hidden="true"
+                    />
+                    {active && (
+                      <Check size={14} className="text-brand ml-auto flex-shrink-0" />
+                    )}
+                  </div>
+                  <p
+                    className={`text-xs font-semibold leading-tight ${
+                      active ? 'text-brand' : 'text-ink'
+                    }`}
+                  >
+                    {t.name}
+                  </p>
+                  <p className="text-[10px] text-ink-muted mt-0.5">
+                    {t.kind === 'light' ? 'Світла' : 'Темна'}
+                  </p>
+                </button>
+              );
+            })}
           </div>
         </div>
 

@@ -5,34 +5,34 @@ export default {
     extend: {
       colors: {
         brand: {
-          DEFAULT: '#6C63FF',
-          dark: '#574BD6',
-          light: '#8B82FF',
-          soft: '#EDEBFF',
+          DEFAULT: 'rgb(var(--brand) / <alpha-value>)',
+          dark: 'rgb(var(--brand-dark) / <alpha-value>)',
+          light: 'rgb(var(--brand-light) / <alpha-value>)',
+          soft: 'rgb(var(--brand-soft) / <alpha-value>)',
         },
         mint: {
-          DEFAULT: '#20C9A6',
-          dark: '#15A88A',
-          soft: '#D6F5EC',
+          DEFAULT: 'rgb(var(--mint) / <alpha-value>)',
+          dark: 'rgb(var(--mint-dark) / <alpha-value>)',
+          soft: 'rgb(var(--mint-soft) / <alpha-value>)',
         },
         ink: {
-          DEFAULT: '#1F2937',
-          muted: '#8491A5',
+          DEFAULT: 'rgb(var(--ink) / <alpha-value>)',
+          muted: 'rgb(var(--ink-muted) / <alpha-value>)',
         },
         danger: {
-          DEFAULT: '#EF4444',
-          soft: '#FEE2E2',
+          DEFAULT: 'rgb(var(--danger) / <alpha-value>)',
+          soft: 'rgb(var(--danger-soft) / <alpha-value>)',
         },
-        canvas: '#F5F7FA',
+        canvas: 'rgb(var(--canvas) / <alpha-value>)',
       },
       borderRadius: {
         '2xl': '1rem',
         '3xl': '1.25rem',
       },
       boxShadow: {
-        card: '0 2px 8px rgba(31, 41, 55, 0.04), 0 8px 24px rgba(31, 41, 55, 0.06)',
-        soft: '0 1px 3px rgba(31, 41, 55, 0.06)',
-        glow: '0 8px 30px rgba(108, 99, 255, 0.25)',
+        card: '0 2px 8px rgb(var(--shadow-color) / 0.04), 0 8px 24px rgb(var(--shadow-color) / 0.06)',
+        soft: '0 1px 3px rgb(var(--shadow-color) / 0.06)',
+        glow: '0 8px 30px rgb(var(--brand) / 0.25)',
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif'],

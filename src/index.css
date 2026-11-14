@@ -4,6 +4,211 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ============================================================
+   Color themes. Tokens are space-separated RGB triplets so that
+   Tailwind alpha classes (bg-brand/30, text-ink-muted/60 ...)
+   keep working. The default theme is Lavender Light.
+   ============================================================ */
+
+:root,
+:root[data-theme='lavender-light'] {
+  --brand: 108 99 255;
+  --brand-dark: 87 75 214;
+  --brand-light: 139 130 255;
+  --brand-soft: 237 235 255;
+  --mint: 32 201 166;
+  --mint-dark: 21 168 138;
+  --mint-soft: 214 245 236;
+  --ink: 31 41 55;
+  --ink-muted: 132 145 165;
+  --danger: 239 68 68;
+  --danger-soft: 254 226 226;
+  --danger-deep: 220 38 38;
+  --canvas: 246 245 251;
+  --card: 255 255 255;
+  --border: 229 231 235;
+  --border-soft: 243 244 246;
+  --border-strong: 209 213 219;
+  --input: 229 231 235;
+  --chart-track: 238 241 246;
+  --shadow-color: 31 41 55;
+  --cat-groceries: 108 99 255;
+  --cat-groceries-bg: 237 235 255;
+  --cat-rent: 245 158 11;
+  --cat-rent-bg: 254 243 199;
+  --cat-utilities: 32 201 166;
+  --cat-utilities-bg: 214 245 236;
+  --cat-internet: 59 130 246;
+  --cat-internet-bg: 219 234 254;
+  --cat-other: 236 72 153;
+  --cat-other-bg: 252 231 243;
+}
+
+:root[data-theme='mint-fresh'] {
+  --brand: 18 158 128;
+  --brand-dark: 14 132 108;
+  --brand-light: 52 199 166;
+  --brand-soft: 209 245 235;
+  --mint: 18 158 128;
+  --mint-dark: 14 132 108;
+  --mint-soft: 214 245 236;
+  --ink: 23 42 35;
+  --ink-muted: 104 130 120;
+  --danger: 239 68 68;
+  --danger-soft: 254 226 226;
+  --danger-deep: 220 38 38;
+  --canvas: 240 249 245;
+  --card: 255 255 255;
+  --border: 222 236 230;
+  --border-soft: 236 245 241;
+  --border-strong: 203 222 214;
+  --input: 222 236 230;
+  --chart-track: 232 243 238;
+  --shadow-color: 23 42 35;
+  --cat-groceries: 18 158 128;
+  --cat-groceries-bg: 209 245 235;
+  --cat-rent: 245 158 11;
+  --cat-rent-bg: 254 243 199;
+  --cat-utilities: 13 148 136;
+  --cat-utilities-bg: 204 240 238;
+  --cat-internet: 59 130 246;
+  --cat-internet-bg: 219 234 254;
+  --cat-other: 236 72 153;
+  --cat-other-bg: 252 231 243;
+}
+
+:root[data-theme='sky-blue'] {
+  --brand: 59 130 246;
+  --brand-dark: 37 99 235;
+  --brand-light: 96 165 250;
+  --brand-soft: 219 234 254;
+  --mint: 13 148 136;
+  --mint-dark: 15 118 110;
+  --mint-soft: 204 240 238;
+  --ink: 30 41 59;
+  --ink-muted: 100 116 139;
+  --danger: 239 68 68;
+  --danger-soft: 254 226 226;
+  --danger-deep: 220 38 38;
+  --canvas: 240 246 253;
+  --card: 255 255 255;
+  --border: 224 233 244;
+  --border-soft: 237 242 249;
+  --border-strong: 201 214 231;
+  --input: 224 233 244;
+  --chart-track: 233 240 249;
+  --shadow-color: 30 41 59;
+  --cat-groceries: 59 130 246;
+  --cat-groceries-bg: 219 234 254;
+  --cat-rent: 245 158 11;
+  --cat-rent-bg: 254 243 199;
+  --cat-utilities: 13 148 136;
+  --cat-utilities-bg: 204 240 238;
+  --cat-internet: 37 99 235;
+  --cat-internet-bg: 219 234 254;
+  --cat-other: 236 72 153;
+  --cat-other-bg: 252 231 243;
+}
+
+:root[data-theme='lavender-night'] {
+  --brand: 124 106 238;
+  --brand-dark: 106 88 224;
+  --brand-light: 167 148 250;
+  --brand-soft: 58 51 84;
+  --mint: 32 190 152;
+  --mint-dark: 24 158 124;
+  --mint-soft: 36 62 54;
+  --ink: 240 238 248;
+  --ink-muted: 158 151 184;
+  --danger: 248 113 113;
+  --danger-soft: 61 33 38;
+  --danger-deep: 153 27 27;
+  --canvas: 28 24 42;
+  --card: 40 35 58;
+  --border: 58 51 80;
+  --border-soft: 49 43 70;
+  --border-strong: 74 66 100;
+  --input: 58 51 80;
+  --chart-track: 52 46 74;
+  --shadow-color: 10 8 20;
+  --cat-groceries: 167 148 250;
+  --cat-groceries-bg: 50 44 78;
+  --cat-rent: 245 176 76;
+  --cat-rent-bg: 59 51 39;
+  --cat-utilities: 63 200 157;
+  --cat-utilities-bg: 30 61 51;
+  --cat-internet: 107 160 242;
+  --cat-internet-bg: 29 47 76;
+  --cat-other: 242 123 180;
+  --cat-other-bg: 61 33 54;
+}
+
+:root[data-theme='forest-night'] {
+  --brand: 34 168 124;
+  --brand-dark: 24 142 104;
+  --brand-light: 78 208 165;
+  --brand-soft: 28 56 45;
+  --mint: 34 190 145;
+  --mint-dark: 24 158 124;
+  --mint-soft: 30 60 48;
+  --ink: 233 242 237;
+  --ink-muted: 145 166 156;
+  --danger: 248 113 113;
+  --danger-soft: 61 33 38;
+  --danger-deep: 153 27 27;
+  --canvas: 20 30 26;
+  --card: 30 45 38;
+  --border: 48 68 59;
+  --border-soft: 40 57 49;
+  --border-strong: 63 86 74;
+  --input: 48 68 59;
+  --chart-track: 44 62 54;
+  --shadow-color: 6 12 10;
+  --cat-groceries: 78 208 165;
+  --cat-groceries-bg: 28 56 45;
+  --cat-rent: 245 176 76;
+  --cat-rent-bg: 58 52 39;
+  --cat-utilities: 63 200 157;
+  --cat-utilities-bg: 30 61 51;
+  --cat-internet: 107 160 242;
+  --cat-internet-bg: 29 47 76;
+  --cat-other: 242 123 180;
+  --cat-other-bg: 61 33 54;
+}
+
+:root[data-theme='midnight-blue'] {
+  --brand: 76 143 240;
+  --brand-dark: 58 118 212;
+  --brand-light: 124 175 248;
+  --brand-soft: 27 44 74;
+  --mint: 45 196 160;
+  --mint-dark: 26 160 130;
+  --mint-soft: 26 52 60;
+  --ink: 233 240 251;
+  --ink-muted: 143 163 192;
+  --danger: 248 113 113;
+  --danger-soft: 61 33 38;
+  --danger-deep: 153 27 27;
+  --canvas: 14 25 44;
+  --card: 23 38 62;
+  --border: 42 62 94;
+  --border-soft: 35 52 82;
+  --border-strong: 56 80 118;
+  --input: 42 62 94;
+  --chart-track: 38 56 88;
+  --shadow-color: 4 8 18;
+  --cat-groceries: 124 175 248;
+  --cat-groceries-bg: 27 44 74;
+  --cat-rent: 245 176 76;
+  --cat-rent-bg: 59 51 39;
+  --cat-utilities: 45 196 160;
+  --cat-utilities-bg: 26 52 60;
+  --cat-internet: 124 175 248;
+  --cat-internet-bg: 27 44 74;
+  --cat-other: 242 123 180;
+  --cat-other-bg: 61 33 54;
+}
+
 html {
   -webkit-text-size-adjust: 100%;
   scroll-behavior: smooth;
@@ -11,8 +216,8 @@ html {
 
 body {
   font-family: 'Inter', system-ui, sans-serif;
-  background-color: #F5F7FA;
-  color: #1F2937;
+  background-color: rgb(var(--canvas));
+  color: rgb(var(--ink));
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -27,7 +232,7 @@ input[type='number'] {
   -moz-appearance: textfield;
 }
 
-/* Custom scrollbar */
+/* Custom scrollbar (theme-aware) */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -36,14 +241,91 @@ input[type='number'] {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #cdd5e0;
+  background: rgb(var(--border-strong));
   border-radius: 999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #b3bdcc;
+  background: rgb(var(--ink-muted));
 }
 
 /* Smooth transitions for state changes */
 .transition-base {
   transition: all 0.2s ease;
+}
+
+/* Smooth theme switching: elements that have no transition utility
+   of their own still animate between theme colors. */
+*,
+*::before,
+*::after {
+  transition-property: background-color, border-color, color, fill, stroke;
+  transition-duration: 0.2s;
+  transition-timing-function: ease;
+}
+
+/* ============================================================
+   Map literal utility classes onto theme tokens so every part
+   of the UI (cards, borders, inputs, dividers) follows the
+   active theme without touching component markup.
+   Declared after @tailwind utilities, so they win the cascade.
+   ============================================================ */
+
+.bg-white {
+  background-color: rgb(var(--card));
+}
+
+.border-gray-100,
+.border-slate-100 {
+  border-color: rgb(var(--border-soft));
+}
+.border-gray-200,
+.border-slate-200 {
+  border-color: rgb(var(--border));
+}
+.border-gray-300,
+.border-slate-300 {
+  border-color: rgb(var(--border-strong));
+}
+.border-gray-200\/60 {
+  border-color: rgb(var(--border) / 0.6);
+}
+
+.bg-gray-200 {
+  background-color: rgb(var(--input));
+}
+.bg-gray-300 {
+  background-color: rgb(var(--border-strong));
+}
+
+.hover\:border-gray-200:hover,
+.hover\:border-slate-200:hover {
+  border-color: rgb(var(--border));
+}
+.hover\:border-gray-300:hover,
+.hover\:border-slate-300:hover {
+  border-color: rgb(var(--border-strong));
+}
+.hover\:bg-gray-200:hover {
+  background-color: rgb(var(--input));
+}
+.hover\:bg-gray-300:hover {
+  background-color: rgb(var(--border-strong));
+}
+
+.divide-gray-100 > :not([hidden]) ~ :not([hidden]) {
+  border-color: rgb(var(--border-soft));
+}
+.divide-gray-200 > :not([hidden]) ~ :not([hidden]) {
+  border-color: rgb(var(--border));
+}
+
+/* red-600 gradient end of the negative balance card */
+.to-red-600 {
+  --tw-gradient-to: rgb(var(--danger-deep));
+}
+
+/* Modal / drawer scrims stay dark in every theme (ink becomes
+   light in dark themes, which would wash the overlay out) */
+.bg-ink\/40 {
+  background-color: rgb(15 14 25 / 0.4);
 }

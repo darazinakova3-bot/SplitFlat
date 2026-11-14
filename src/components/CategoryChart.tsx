@@ -70,7 +70,7 @@ export function CategoryChart({ expenses }: CategoryChartProps) {
               cy="80"
               r={radius}
               fill="none"
-              stroke="#EEF1F6"
+              style={{ stroke: 'rgb(var(--chart-track))' }}
               strokeWidth={stroke}
             />
             {segments.segs.map((seg, i) => {
@@ -83,7 +83,7 @@ export function CategoryChart({ expenses }: CategoryChartProps) {
                   cy="80"
                   r={radius}
                   fill="none"
-                  stroke={seg.cat.color}
+                  style={{ stroke: seg.cat.color }}
                   strokeWidth={stroke}
                   strokeDasharray={dash}
                   strokeDashoffset={-offset}

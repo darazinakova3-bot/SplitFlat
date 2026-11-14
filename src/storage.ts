@@ -1,9 +1,12 @@
 import type { AppState, MonthData } from './lib';
 import { getMonthKey, uid } from './lib';
+import { DEFAULT_THEME, THEMES } from './themes';
+import type { ThemeId } from './themes';
 
 const STORAGE_KEY = 'splitflat_state_v1';
 const API_KEY_STORAGE = 'splitflat_openrouter_key';
 const MODEL_STORAGE = 'splitflat_openrouter_model';
+const THEME_STORAGE = 'splitflat_theme_v1';
 
 function createInitialMonth(): MonthData {
   return { members: [], expenses: [], payments: [], shopping: [] };
@@ -113,4 +116,28 @@ export function saveModel(model: string): void {
   } catch {
     // ignore
   }
+}
+
+/** Load the saved color theme, falling back to the default one. */
+export function loadTheme(): ThemeId {
+  try {
+    const raw = localStorage.getItem(THEME_STORAGE);
+    if (raw && THEMES.some((t) => t.id === raw)) return raw as ThemeId;
+  } catch {
+    // ignore
+  }
+  return DEFAULT_THEME;
+}
+
+export function saveTheme(theme: ThemeId): void {
+  try {
+    localStorage.setItem(THEME_STORAGE, theme);
+  } catch {
+    // ignore
+  }
+}
+
+/** Apply a theme to the document without reloading the page. */
+export function applyTheme(theme: ThemeId): void {
+  document.documentElement.dataset.theme = theme;
 }

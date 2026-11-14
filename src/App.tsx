@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { AppState, Member, Expense, Payment } from '@/lib';
+import type { AppState, Member, Expense, Payment, ShoppingItem } from '@/lib';
 import {
   loadState,
   saveState,
@@ -27,6 +27,7 @@ import { MonthCompareSection } from '@/components/MonthCompareSection';
 import { CalendarSection } from '@/components/CalendarSection';
 import { SettingsModal } from '@/components/SettingsModal';
 import { EmptyMembersState } from '@/components/EmptyMembersState';
+import { ShoppingListSection } from '@/components/ShoppingListSection';
 import { ToastContainer } from '@/components/Toast';
 import type { ToastMessage, ToastKind } from '@/components/Toast';
 
@@ -47,6 +48,7 @@ function App() {
     members: [],
     expenses: [],
     payments: [],
+    shopping: [],
   };
 
   const membersMap = useMemo(() => {
@@ -126,6 +128,9 @@ function App() {
       const newPayments = month.payments.filter(
         (p) => p.fromMemberId !== id && p.toMemberId !== id,
       );
+      const newShopping = (month.shopping ?? []).map((s) =>
+        s.assignedTo === id ? { ...s, assignedTo: null } : s,
+      );
       const newMembers = month.members.filter((m) => m.id !== id);
       return {
         ...prev,
@@ -136,6 +141,7 @@ function App() {
             members: newMembers,
             expenses: newExpenses,
             payments: newPayments,
+            shopping: newShopping,
           },
         },
         activeUserId:
@@ -205,6 +211,82 @@ function App() {
       };
     });
     pushToast('Витрату видалено', 'info');
+  };
+
+  // --- Shopping list ---
+  const addShoppingItem = (item: ShoppingItem) => {
+    setState((prev) => {
+      const month = prev.months[prev.currentMonth];
+      if (!month) return prev;
+      return {
+        ...prev,
+        months: {
+          ...prev.months,
+          [prev.currentMonth]: {
+            ...month,
+            shopping: [...(month.shopping ?? []), item],
+          },
+        },
+      };
+    });
+    pushToast('Покупку додано');
+  };
+
+  const toggleShoppingItem = (id: string) => {
+    setState((prev) => {
+      const month = prev.months[prev.currentMonth];
+      if (!month) return prev;
+      return {
+        ...prev,
+        months: {
+          ...prev.months,
+          [prev.currentMonth]: {
+            ...month,
+            shopping: (month.shopping ?? []).map((it) =>
+              it.id === id ? { ...it, purchased: !it.purchased } : it,
+            ),
+          },
+        },
+      };
+    });
+  };
+
+  const updateShoppingItem = (item: ShoppingItem) => {
+    setState((prev) => {
+      const month = prev.months[prev.currentMonth];
+      if (!month) return prev;
+      return {
+        ...prev,
+        months: {
+          ...prev.months,
+          [prev.currentMonth]: {
+            ...month,
+            shopping: (month.shopping ?? []).map((it) =>
+              it.id === item.id ? item : it,
+            ),
+          },
+        },
+      };
+    });
+    pushToast('Покупку оновлено');
+  };
+
+  const deleteShoppingItem = (id: string) => {
+    setState((prev) => {
+      const month = prev.months[prev.currentMonth];
+      if (!month) return prev;
+      return {
+        ...prev,
+        months: {
+          ...prev.months,
+          [prev.currentMonth]: {
+            ...month,
+            shopping: (month.shopping ?? []).filter((it) => it.id !== id),
+          },
+        },
+      };
+    });
+    pushToast('Покупку видалено', 'info');
   };
 
   const startEdit = (exp: Expense) => {
@@ -391,7 +473,15 @@ function App() {
                 onDelete={deleteExpense}
               />
             </>
-          )}
+          )} 
+          <ShoppingListSection
+            members={monthData.members}
+            items={monthData.shopping ?? []}
+            onAdd={addShoppingItem}
+            onUpdate={updateShoppingItem}
+            onDelete={deleteShoppingItem}
+            onToggle={toggleShoppingItem}
+          />
         </div>
       </main>
 

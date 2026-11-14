@@ -40,10 +40,20 @@ export interface Payment {
   monthKey: string;
 }
 
+export interface ShoppingItem {
+  id: string;
+  title: string;
+  quantity?: string;
+  assignedTo?: string | null; // member id responsible for buying
+  purchased: boolean;
+  createdAt: number;
+}
+
 export interface MonthData {
   members: Member[];
   expenses: Expense[];
   payments: Payment[];
+  shopping: ShoppingItem[];
 }
 
 export interface AppState {

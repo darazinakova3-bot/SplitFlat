@@ -6,7 +6,7 @@ const API_KEY_STORAGE = 'splitflat_openrouter_key';
 const MODEL_STORAGE = 'splitflat_openrouter_model';
 
 function createInitialMonth(): MonthData {
-  return { members: [], expenses: [], payments: [] };
+  return { members: [], expenses: [], payments: [], shopping: [] };
 }
 
 export function createInitialState(): AppState {
@@ -27,6 +27,11 @@ export function loadState(): AppState {
     // Ensure current month exists
     if (!parsed.months[parsed.currentMonth]) {
       parsed.months[parsed.currentMonth] = createInitialMonth();
+    }
+    // Migrate older states: ensure shopping array exists
+    for (const key of Object.keys(parsed.months)) {
+      const m = parsed.months[key];
+      if (!m.shopping) m.shopping = [];
     }
     return parsed;
   } catch {
@@ -62,6 +67,7 @@ export function createNewMonth(state: AppState, monthKey?: string): AppState {
     members: current?.members.map((m) => ({ ...m })) ?? [],
     expenses: [],
     payments: [],
+    shopping: [],
   };
   return {
     ...state,

@@ -1,4 +1,4 @@
-import { Home, Settings, ChevronLeft, ChevronRight, Plus } from 'lucide-react';
+import { Menu, Settings, ChevronLeft, ChevronRight, Plus } from 'lucide-react';
 import { formatMonthLabel } from '@/lib';
 import type { MonthData } from '@/lib';
 
@@ -9,6 +9,7 @@ interface HeaderProps {
   onNextMonth: () => void;
   onOpenSettings: () => void;
   onNewMonth: () => void;
+  onOpenMenu: () => void;
   monthData: MonthData;
 }
 
@@ -19,6 +20,7 @@ export function Header({
   onNextMonth,
   onOpenSettings,
   onNewMonth,
+  onOpenMenu,
 }: HeaderProps) {
   const sortedMonths = [...months].sort();
   const idx = sortedMonths.indexOf(currentMonth);
@@ -29,9 +31,15 @@ export function Header({
     <header className="sticky top-0 z-30 bg-canvas/80 backdrop-blur-md border-b border-gray-200/60">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between gap-3">
         <div className="flex items-center gap-3 min-w-0">
-          <div className="h-10 w-10 rounded-2xl bg-brand flex items-center justify-center shadow-glow flex-shrink-0">
-            <Home size={22} className="text-white" />
-          </div>
+          <button
+            type="button"
+            onClick={onOpenMenu}
+            className="h-10 w-10 rounded-2xl bg-brand flex items-center justify-center shadow-glow flex-shrink-0 text-white hover:bg-brand-dark transition-colors"
+            aria-label="Відкрити меню"
+            title="Меню"
+          >
+            <Menu size={22} />
+          </button>
           <div className="min-w-0">
             <h1 className="text-lg font-bold text-ink leading-tight truncate">
               SplitFlat

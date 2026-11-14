@@ -28,6 +28,8 @@ import { CalendarSection } from '@/components/CalendarSection';
 import { SettingsModal } from '@/components/SettingsModal';
 import { EmptyMembersState } from '@/components/EmptyMembersState';
 import { ShoppingListSection } from '@/components/ShoppingListSection';
+import { SideMenu } from '@/components/SideMenu';
+import type { Section } from '@/components/SideMenu';
 import { ToastContainer } from '@/components/Toast';
 import type { ToastMessage, ToastKind } from '@/components/Toast';
 
@@ -37,6 +39,8 @@ function App() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
   const [addMembersOpen, setAddMembersOpen] = useState(false);
+  const [activeSection, setActiveSection] = useState<Section>('home');
+  const [menuOpen, setMenuOpen] = useState(false);
   const formRef = useRef<HTMLDivElement>(null);
 
   // persist
@@ -397,93 +401,113 @@ function App() {
         onNextMonth={goNextMonth}
         onOpenSettings={() => setSettingsOpen(true)}
         onNewMonth={handleNewMonth}
+        onOpenMenu={() => setMenuOpen(true)}
         monthData={monthData}
       />
 
       <main className="max-w-6xl mx-auto px-4 sm:px-6 py-6 pb-16">
+        {/* Sections stay mounted (hidden via CSS) so internal state like
+            history filters or a draft expense survives section switches */}
         <div className="flex flex-col gap-5">
-          {/* Balance cards always show */}
-          <BalanceCards summary={summary} />
+          <div className={activeSection === 'home' ? 'flex flex-col gap-5' : 'hidden'}>
+            {/* Balance cards always show */}
+            <BalanceCards summary={summary} />
 
-          {!hasMembers ? (
-            <>
-              <EmptyMembersState onAdd={() => setAddMembersOpen(true)} />
-              <MembersSection
-                members={monthData.members}
-                activeUserId={state.activeUserId}
-                balances={balances}
-                startAdding={addMembersOpen}
-                onAddingChange={setAddMembersOpen}
-                onAdd={addMember}
-                onUpdate={updateMember}
-                onDelete={deleteMember}
-                onSetActive={setActiveUser}
-              />
-            </>
-          ) : (
-            <>
-              <MembersSection
-                members={monthData.members}
-                activeUserId={state.activeUserId}
-                balances={balances}
-                onAdd={addMember}
-                onUpdate={updateMember}
-                onDelete={deleteMember}
-                onSetActive={setActiveUser}
-              />
-
-              <div ref={formRef}>
-                <AddExpenseForm
+            {!hasMembers ? (
+              <>
+                <EmptyMembersState onAdd={() => setAddMembersOpen(true)} />
+                <MembersSection
                   members={monthData.members}
-                  editingExpense={editingExpense}
-                  onAdd={addExpense}
-                  onUpdate={updateExpense}
-                  onCancelEdit={cancelEdit}
+                  activeUserId={state.activeUserId}
+                  balances={balances}
+                  startAdding={addMembersOpen}
+                  onAddingChange={setAddMembersOpen}
+                  onAdd={addMember}
+                  onUpdate={updateMember}
+                  onDelete={deleteMember}
+                  onSetActive={setActiveUser}
                 />
-              </div>
+              </>
+            ) : (
+              <>
+                <MembersSection
+                  members={monthData.members}
+                  activeUserId={state.activeUserId}
+                  balances={balances}
+                  onAdd={addMember}
+                  onUpdate={updateMember}
+                  onDelete={deleteMember}
+                  onSetActive={setActiveUser}
+                />
 
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-                <DebtsSection
-                  settlements={settlements}
+                <div ref={formRef}>
+                  <AddExpenseForm
+                    members={monthData.members}
+                    editingExpense={editingExpense}
+                    onAdd={addExpense}
+                    onUpdate={updateExpense}
+                    onCancelEdit={cancelEdit}
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                  <DebtsSection
+                    settlements={settlements}
+                    members={membersMap}
+                    onSettle={settleDebt}
+                  />
+                  <CategoryChart expenses={monthData.expenses} />
+                </div>
+
+                <HistorySection
+                  expenses={monthData.expenses}
                   members={membersMap}
-                  onSettle={settleDebt}
+                  onEdit={startEdit}
+                  onDelete={deleteExpense}
                 />
-                <CategoryChart expenses={monthData.expenses} />
-              </div>
+              </>
+            )}
+          </div>
 
-              <MonthCompareSection
-                currentMonthKey={state.currentMonth}
-                currentTotal={monthTotal(monthData)}
-                currentCount={monthData.expenses.length}
-                prevMonthKey={prevMonthKey}
-                prevTotal={monthTotal(prevMonthData)}
-                prevCount={prevMonthData?.expenses.length ?? 0}
-              />
+          <div className={activeSection === 'analytics' ? 'flex flex-col gap-5' : 'hidden'}>
+            <MonthCompareSection
+              currentMonthKey={state.currentMonth}
+              currentTotal={monthTotal(monthData)}
+              currentCount={monthData.expenses.length}
+              prevMonthKey={prevMonthKey}
+              prevTotal={monthTotal(prevMonthData)}
+              prevCount={prevMonthData?.expenses.length ?? 0}
+            />
 
-              <CalendarSection
-                currentMonthKey={state.currentMonth}
-                expenses={monthData.expenses}
-                members={membersMap}
-              />
+            <CalendarSection
+              currentMonthKey={state.currentMonth}
+              expenses={monthData.expenses}
+              members={membersMap}
+            />
+          </div>
 
-              <HistorySection
-                expenses={monthData.expenses}
-                members={membersMap}
-                onEdit={startEdit}
-                onDelete={deleteExpense}
-              />
-            </>
-          )} 
-          <ShoppingListSection
-            members={monthData.members}
-            items={monthData.shopping ?? []}
-            onAdd={addShoppingItem}
-            onUpdate={updateShoppingItem}
-            onDelete={deleteShoppingItem}
-            onToggle={toggleShoppingItem}
-          />
+          <div className={activeSection === 'shopping' ? 'flex flex-col gap-5' : 'hidden'}>
+            <ShoppingListSection
+              members={monthData.members}
+              items={monthData.shopping ?? []}
+              onAdd={addShoppingItem}
+              onUpdate={updateShoppingItem}
+              onDelete={deleteShoppingItem}
+              onToggle={toggleShoppingItem}
+            />
+          </div>
         </div>
       </main>
+
+      <SideMenu
+        open={menuOpen}
+        active={activeSection}
+        onSelect={(s) => {
+          setActiveSection(s);
+          setMenuOpen(false);
+        }}
+        onClose={() => setMenuOpen(false)}
+      />
 
       <SettingsModal
         open={settingsOpen}

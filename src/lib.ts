@@ -25,7 +25,7 @@ export interface Expense {
   date: string; // ISO date string
   createdAt: number;
   monthKey: string; // YYYY-MM
-  receiptPath?: string; // Supabase Storage path for receipt image
+  receiptPath?: string; // Local storage path for receipt image
 }
 
 export interface Payment {

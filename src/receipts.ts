@@ -1,11 +1,10 @@
-import { supabase } from './supabaseClient';
 import { uid } from './lib';
 
-const BUCKET = 'receipts';
+const PREFIX = 'splitflat_receipt:';
 const MAX_DIMENSION = 1200;
 const JPEG_QUALITY = 0.8;
 
-/** Resize and compress an image file client-side before upload. */
+/** Resize and compress an image file client-side before saving. */
 async function resizeImage(file: File): Promise<Blob> {
   const bitmap = await createImageBitmap(file);
   let { width, height } = bitmap;
@@ -33,18 +32,35 @@ async function resizeImage(file: File): Promise<Blob> {
   });
 }
 
-/** Upload a receipt image and return the storage path. */
+function blobToDataUrl(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = () => reject(new Error('Не вдалося прочитати зображення'));
+    reader.readAsDataURL(blob);
+  });
+}
+
+async function saveReceipt(path: string, blob: Blob): Promise<void> {
+  const dataUrl = await blobToDataUrl(blob);
+  try {
+    localStorage.setItem(PREFIX + path, dataUrl);
+  } catch {
+    throw new Error(
+      'Недостатньо місця у сховищі браузера. Видаліть старі чеки та спробуйте ще раз.',
+    );
+  }
+}
+
+/** Save a receipt image and return the storage path. */
 export async function uploadReceipt(file: File): Promise<string> {
   const compressed = await resizeImage(file);
   const path = `expenses/${uid()}.jpg`;
-  const { error } = await supabase.storage
-    .from(BUCKET)
-    .upload(path, compressed, { contentType: 'image/jpeg' });
-  if (error) throw error;
+  await saveReceipt(path, compressed);
   return path;
 }
 
-/** Replace an existing receipt — deletes the old file, uploads new one. */
+/** Replace an existing receipt — deletes the old file, saves the new one. */
 export async function replaceReceipt(
   file: File,
   oldPath: string,
@@ -55,15 +71,16 @@ export async function replaceReceipt(
 
 /** Delete a receipt from storage. Silently ignores already-removed files. */
 export async function deleteReceipt(path: string): Promise<void> {
-  const { error } = await supabase.storage.from(BUCKET).remove([path]);
-  if (error && !error.message.includes('not found')) throw error;
+  try {
+    localStorage.removeItem(PREFIX + path);
+  } catch {
+    // ignore
+  }
 }
 
-/** Get a short-lived signed URL for viewing a receipt. */
+/** Get a URL for viewing a receipt (data URL stored locally). */
 export async function getReceiptUrl(path: string): Promise<string> {
-  const { data, error } = await supabase.storage
-    .from(BUCKET)
-    .createSignedUrl(path, 3600);
-  if (error) throw error;
-  return data.signedUrl;
+  const dataUrl = localStorage.getItem(PREFIX + path);
+  if (!dataUrl) throw new Error('Чек не знайдено у локальному сховищі');
+  return dataUrl;
 }
